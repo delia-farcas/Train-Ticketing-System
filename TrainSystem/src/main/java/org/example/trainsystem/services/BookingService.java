@@ -1,7 +1,7 @@
 package org.example.trainsystem.services;
 
 import lombok.RequiredArgsConstructor;
-import org.example.trainsystem.dto.BookingRequest;
+import org.example.trainsystem.dto.BookingRequestDTO;
 import org.example.trainsystem.models.Booking;
 import org.example.trainsystem.models.Station;
 import org.example.trainsystem.models.Train;
@@ -13,8 +13,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class BookingService {
@@ -25,7 +23,7 @@ public class BookingService {
     private final JavaMailSender mailSender;
 
     @Transactional
-    public Booking createBooking(BookingRequest request) {
+    public Booking createBooking(BookingRequestDTO request) {
         Train train = trainRepository.findById(request.getTrainId())
                 .orElseThrow(() -> new RuntimeException("Train not found"));
 
@@ -38,8 +36,8 @@ public class BookingService {
             throw new RuntimeException("Not enough places availavle. Actual number of available places:" + (train.getTotalSeats() - occupiedSeats));
         }
 
-        Station depStation = stationRepository.findById(request.getDepartureStationId()).get();
-        Station arrStation = stationRepository.findById(request.getArrivalStationId()).get();
+        Station depStation = stationRepository.findByNameIgnoreCase(request.getDepartureStationName()).get();
+        Station arrStation = stationRepository.findByNameIgnoreCase(request.getArrivalStationName()).get();
 
         Booking booking = Booking.builder()
                 .passengerEmail(request.getPassengerEmail())

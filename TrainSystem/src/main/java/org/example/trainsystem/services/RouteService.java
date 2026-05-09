@@ -1,6 +1,7 @@
 package org.example.trainsystem.services;
 
 
+import org.example.trainsystem.dto.RouteResponseDTO;
 import org.example.trainsystem.models.RouteStop;
 import org.example.trainsystem.repositories.RouteStopRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,50 +17,66 @@ public class RouteService {
 
     private final RouteStopRepository routeStopRepository;
 
-    public List<String> findRoutes(String fromStation, String toStation) {
-        List<String> results = new ArrayList<>();
+    public List<RouteResponseDTO> findRoutes(String fromStation, String toStation) {
+        List<RouteResponseDTO> results = new ArrayList<>();
 
-        List<RouteStop> departureStops = routeStopRepository.findByStationName(fromStation);
-        List<RouteStop> arrivalStops = routeStopRepository.findByStationName(toStation);
+        List<RouteStop> departureStops = routeStopRepository.findByStationNameIgnoreCase(fromStation);
+        List<RouteStop> arrivalStops = routeStopRepository.findByStationNameIgnoreCase(toStation);
 
         for (RouteStop dep : departureStops) {
             for (RouteStop arr : arrivalStops) {
                 if (dep.getRoute().getId().equals(arr.getRoute().getId()) && dep.getStopOrder() < arr.getStopOrder()) {
-                    results.add("Direct: Train " + dep.getRoute().getTrain().getTrainNumber() +
-                            " | Departure: " + dep.getDepartureTime() + " -> Arrival: " + arr.getArrivalTime());
+                    results.add(new RouteResponseDTO(
+                            dep.getRoute().getTrain().getId(),
+                            dep.getRoute().getTrain().getTrainNumber(),
+                            fromStation,
+                            toStation,
+                            dep.getDepartureTime().toString(),
+                            arr.getArrivalTime().toString()
+                    ));
                 }
             }
         }
 
+        // Dacă nu sunt rute directe, căutăm cu schimbare
         if (results.isEmpty()) {
             results.addAll(findConnectionWithChange(fromStation, toStation));
         }
 
         if (results.isEmpty()) {
-            throw new RuntimeException("We are sorry! We could not find direct/changing routes from " + fromStation + " to " + toStation);
+            throw new RuntimeException("We are sorry! We could not find routes from " + fromStation + " to " + toStation);
         }
 
         return results;
     }
 
-    private List<String> findConnectionWithChange(String from, String to) {
-        List<String> connections = new ArrayList<>();
-        List<RouteStop> departuresFromStart = routeStopRepository.findByStationName(from);
-        List<RouteStop> arrivalsAtEnd = routeStopRepository.findByStationName(to);
+    private List<RouteResponseDTO> findConnectionWithChange(String from, String to) {
+        List<RouteResponseDTO> connections = new ArrayList<>();
+        List<RouteStop> departuresFromStart = routeStopRepository.findByStationNameIgnoreCase(from);
+        List<RouteStop> arrivalsAtEnd = routeStopRepository.findByStationNameIgnoreCase(to);
 
         for (RouteStop startStop : departuresFromStart) {
-            List<RouteStop> intermediateStops = startStop.getRoute().getStops().stream()
+            List<RouteStop> possibleTransferStops = startStop.getRoute().getStops().stream()
                     .filter(s -> s.getStopOrder() > startStop.getStopOrder())
                     .collect(Collectors.toList());
 
-            for (RouteStop inter : intermediateStops) {
+            for (RouteStop transferPoint : possibleTransferStops) {
                 for (RouteStop endStop : arrivalsAtEnd) {
-                    if (endStop.getStation().getName().equals(inter.getStation().getName()) &&
-                            endStop.getRoute().getId() != startStop.getRoute().getId()) {
+                    if (endStop.getStation().getName().equalsIgnoreCase(transferPoint.getStation().getName()) &&
+                            !endStop.getRoute().getId().equals(startStop.getRoute().getId())) {
 
-                        connections.add("Change in " + inter.getStation().getName() + ": " +
-                                "Tren 1 (" + startStop.getRoute().getTrain().getTrainNumber() + ") -> " +
-                                "Tren 2 (" + endStop.getRoute().getTrain().getTrainNumber() + ")");
+                        String detail = "Change in " + transferPoint.getStation().getName() +
+                                " (Tren 1: " + startStop.getRoute().getTrain().getTrainNumber() +
+                                " ➔ Tren 2: " + endStop.getRoute().getTrain().getTrainNumber() + ")";
+
+                        connections.add(new RouteResponseDTO(
+                                startStop.getRoute().getTrain().getId(),
+                                startStop.getRoute().getTrain().getTrainNumber(),
+                                from,
+                                to,
+                                startStop.getDepartureTime().toString(),
+                                endStop.getArrivalTime().toString() + " (via " + transferPoint.getStation().getName() + ")"
+                        ));
                     }
                 }
             }

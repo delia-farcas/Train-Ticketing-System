@@ -20,7 +20,7 @@ public class Route {
     @ManyToOne
     private Train train;
 
-    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stopOrder ASC")
     private List<RouteStop> stops;
 }

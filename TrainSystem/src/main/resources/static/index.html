@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Train Ticketing System - Admin Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; padding-top: 50px; }
+        .card { margin-bottom: 25px; border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .nav-tabs .nav-link { border: none; color: #555; font-weight: 500; }
+        .nav-tabs .nav-link.active { color: #990dfd; border-bottom: 3px solid #890dfd; background: none; }
+        .admin-section-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
+        .btn-action { padding: 2px 8px; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="text-center mb-4">🚆Train Ticketing System</h1>
+
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#search">Search & Book</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-trains" onclick="loadTrains()">Manage Trains</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-routes" onclick="loadRoutes()">Manage Routes</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#admin-bookings" onclick="loadBookings()">View Bookings</button></li>
+    </ul>
+
+    <div class="tab-content mt-4">
+        <div class="tab-pane fade show active" id="search">
+            <div class="card p-4">
+                <h3>Find your train</h3>
+                <div class="row g-3">
+                    <div class="col-md-5"><input type="text" id="from" class="form-control" placeholder="From..."></div>
+                    <div class="col-md-5"><input type="text" id="to" class="form-control" placeholder="To..."></div>
+                    <div class="col-md-2"><button onclick="searchRoutes()" class="btn btn-primary w-100">Search</button></div>
+                </div>
+                <div id="results" class="mt-4"></div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="admin-trains">
+            <div class="card p-4">
+                <h4 class="admin-section-title">Add / Update Train</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><input type="text" id="trainNum" class="form-control" placeholder="Train Number"></div>
+                    <div class="col-md-4"><input type="number" id="seats" class="form-control" placeholder="Total Seats"></div>
+                    <div class="col-md-4"><button onclick="addTrain()" class="btn btn-success w-100">Save Train</button></div>
+                </div>
+                <h4 class="admin-section-title">Train List & Delays</h4>
+                <div id="train-list-container"></div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="admin-routes">
+            <div class="card p-4">
+                <h4 class="admin-section-title">Add New Direct Route</h4>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <label class="form-label">Assign Train ID</label>
+                        <input type="number" id="routeTrainId" class="form-control" placeholder="e.g. 1">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Route Display Name</label>
+                        <input type="text" id="routeName" class="form-control" placeholder="e.g. Bucuresti - Constanta Direct">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Departure Station</label>
+                        <input type="text" id="depStation" class="form-control" placeholder="e.g. Cluj-Napoca">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" id="depTime" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Arrival Station</label>
+                        <input type="text" id="arrStation" class="form-control" placeholder="e.g. Pascani">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" id="arrTime" class="form-control">
+                    </div>
+
+                    <div class="col-md-12">
+                        <button onclick="addRoute()" class="btn btn-success w-100">Create Route & Stops</button>
+                    </div>
+                </div>
+
+                <h4 class="admin-section-title">Existing Routes</h4>
+                <div id="route-list-container"></div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="admin-bookings">
+            <div class="card p-4">
+                <h4 class="admin-section-title">All System Bookings</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                        <tr><th>ID</th><th>Email</th><th>Train</th><th>Route</th><th>Seats</th><th>Date</th></tr>
+                        </thead>
+                        <tbody id="bookings-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "/api/admin";
+    async function loadBookings() {
+        const tbody = document.getElementById('bookings-table-body');
+        try {
+            const response = await fetch(`${API_BASE}/bookings`);
+            const bookings = await response.json();
+            tbody.innerHTML = bookings.map(b => `
+                <tr>
+                    <td>#${b.id}</td>
+                    <td>${b.passengerEmail}</td>
+                    <td>${b.trainNumber}</td>
+                    <td>${b.departureStationName} ➔ ${b.arrivalStationName}</td>
+                    <td>${b.numberOfSeats}</td>
+                    <td>${b.travelDate}</td>
+                </tr>
+            `).join('');
+        } catch (e) { tbody.innerHTML = "<tr><td colspan='6'>Failed to load bookings.</td></tr>"; }
+    }
+
+    async function loadRoutes() {
+        const container = document.getElementById('route-list-container');
+        try {
+            const response = await fetch(`${API_BASE}/routes`);
+            const routes = await response.json();
+            container.innerHTML = routes.map(r => {
+                const dep = r.stops && r.stops[0] ? r.stops[0].station.name : 'N/A';
+                const arr = r.stops && r.stops.length > 1 ? r.stops[r.stops.length-1].station.name : 'N/A';
+                return `
+                    <div class="d-flex justify-content-between border-bottom py-2">
+                         <span>
+                         <strong>ID: ${r.id}</strong> - ${r.name || 'No Name'}
+                         <small class="text-muted">(${dep} ➔ ${arr})</small>
+                         <span class="badge bg-info text-dark">Train: ${r.train ? r.train.trainNumber : 'N/A'}</span>
+                    </span>
+                    <button onclick="deleteRoute(${r.id})" class="btn btn-action btn-outline-danger">Delete</button>
+                    </div>`;
+            }).join('');
+        } catch (e) { container.innerHTML = "No routes found."; }
+    }
+
+    async function addRoute() {
+        const trainId = document.getElementById('routeTrainId').value;
+        const routeName = document.getElementById('routeName').value;
+        const depStation = document.getElementById('depStation').value;
+        const depTime = document.getElementById('depTime').value;
+        const arrStation = document.getElementById('arrStation').value;
+        const arrTime = document.getElementById('arrTime').value;
+
+        if(!trainId || !depStation || !depTime || !arrStation || !arrTime) {
+            alert("Please fill all fields!");
+            return;
+        }
+
+        const routeData = {
+            trainId: parseInt(trainId),
+            routeName: routeName,
+            stops: [
+                { stationName: depStation, stopOrder: 1, arrivalTime: null, departureTime: depTime },
+                { stationName: arrStation, stopOrder: 2, arrivalTime: arrTime, departureTime: null }
+            ]
+        };
+
+        const response = await fetch(`${API_BASE}/routes/simple`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(routeData)
+        });
+
+        if(response.ok) {
+            alert("Route created!");
+            loadRoutes();
+        } else {
+            const err = await response.text();
+            alert("Error 400: Check if Train ID exists and Station names match DB exactly.\nDetails: " + err);
+        }
+    }
+
+    async function deleteRoute(id) {
+        if(confirm("Delete route?")) {
+            await fetch(`${API_BASE}/routes/${id}`, { method: 'DELETE' });
+            loadRoutes();
+        }
+    }
+
+    async function loadTrains() {
+        const container = document.getElementById('train-list-container');
+        try {
+            const response = await fetch(`${API_BASE}/trains`);
+            const trains = await response.json();
+            container.innerHTML = trains.map(t => `
+                <div class="card p-2 mb-2 border d-flex flex-row justify-content-between align-items-center shadow-sm">
+                    <span><strong>ID: ${t.id}</strong> | ${t.trainNumber} (${t.totalSeats} seats)</span>
+                    <div>
+                        <button onclick="notifyDelayPrompt(${t.id})" class="btn btn-action btn-warning">Delay</button>
+                        <button onclick="updateTrainPrompt(${t.id}, ${t.totalSeats})" class="btn btn-action btn-primary mx-1">Update</button>
+                        <button onclick="deleteTrain(${t.id})" class="btn btn-action btn-danger">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { container.innerHTML = "Error loading trains."; }
+    }
+
+    async function addTrain() {
+        const trainNumber = document.getElementById('trainNum').value;
+        const totalSeats = document.getElementById('seats').value;
+        await fetch(`${API_BASE}/trains`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ trainNumber, totalSeats: parseInt(totalSeats) })
+        });
+        loadTrains();
+    }
+
+    async function deleteTrain(id) {
+        if(confirm("Delete train?")) {
+            const res = await fetch(`${API_BASE}/trains/${id}`, { method: 'DELETE' });
+            if (!res.ok) alert(await res.text());
+            loadTrains();
+        }
+    }
+
+    async function updateTrainPrompt(id, oldSeats) {
+        const newSeats = prompt("New seat capacity:", oldSeats);
+        if(newSeats) {
+            await fetch(`${API_BASE}/trains/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ totalSeats: parseInt(newSeats) })
+            });
+            loadTrains();
+        }
+    }
+
+    async function notifyDelayPrompt(id) {
+        const time = prompt("Delay time (e.g. 20 mins):");
+        if(time) {
+            await fetch(`${API_BASE}/notify-delay?trainId=${id}&delayTime=${encodeURIComponent(time)}`, { method: 'POST' });
+            alert("Delay notification sent!");
+        }
+    }
+
+    async function searchRoutes() {
+        const from = document.getElementById('from').value;
+        const to = document.getElementById('to').value;
+        const response = await fetch(`/api/passenger/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+        const data = await response.json();
+        const resDiv = document.getElementById('results');
+        if (response.ok && data.length > 0) {
+            resDiv.innerHTML = data.map(route => {
+                return `
+                    <div class="card p-3 mb-2 border-start border-primary border-4 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 text-primary">Train ${route.trainNumber}</h5>
+                                <p class="mb-0 text-muted">${route.departureStation} (${route.departureTime}) ➔ ${route.arrivalStation} (${route.arrivalTime})</p>
+                            </div>
+                            <button onclick="bookTicket(${route.trainId}, '${route.departureStation}', '${route.arrivalStation}')" class="btn btn-dark">Book Now</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            resDiv.innerHTML = "<div class='alert alert-warning'>No routes found.</div>";
+        }
+    }
+
+    async function bookTicket(trainId, from, to) {
+        const email = prompt("Email:");
+        const seats = prompt("Seats:", "1");
+        if (!email || !seats) return;
+        const response = await fetch('/api/passenger/book', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                passengerEmail: email, trainId,
+                departureStationName: from, arrivalStationName: to,
+                travelDate: new Date().toISOString().split('T')[0],
+                numberOfSeats: parseInt(seats)
+            })
+        });
+        if(response.ok) alert("Booked!");
+        else alert("Failed: " + await response.text());
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

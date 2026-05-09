@@ -1,5 +1,6 @@
 package org.example.trainsystem.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalTime;
@@ -17,6 +18,7 @@ public class RouteStop {
 
     @ManyToOne
     @JoinColumn(name = "route_id")
+    @JsonIgnore
     private Route route;
 
     @ManyToOne
