@@ -38,7 +38,6 @@ public class RouteService {
             }
         }
 
-        // Dacă nu sunt rute directe, căutăm cu schimbare
         if (results.isEmpty()) {
             results.addAll(findConnectionWithChange(fromStation, toStation));
         }
