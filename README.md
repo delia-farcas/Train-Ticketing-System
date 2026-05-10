@@ -126,3 +126,214 @@ To execute the entire test suite, use the following Maven command:
 ```bash
 mvn test
 ```
+## API Functionality Examples
+
+Below are examples of inputs and outputs for all supported operations in the Train Ticketing System.
+
+### Admin Functionalities
+
+#### 1. Add a New Train
+- **Endpoint:** `POST /api/admin/trains`
+- **Description:** Registers a new train in the system.
+- **Input (JSON Request Body):**
+```json
+{
+  "trainNumber": "IR-1234",
+  "totalSeats": 150
+}
+```
+- **Output (JSON Response):**
+```json
+{
+  "id": 1,
+  "trainNumber": "IR-1234",
+  "totalSeats": 150
+}
+```
+
+#### 2. Get All Trains
+- **Endpoint:** `GET /api/admin/trains`
+- **Description:** Retrieves a list of all registered trains.
+- **Input:** None
+- **Output (JSON Response):**
+```json
+[
+  {
+    "id": 1,
+    "trainNumber": "IR-1234",
+    "totalSeats": 150
+  }
+]
+```
+
+#### 3. Update Train Seats
+- **Endpoint:** `PUT /api/admin/trains/{id}`
+- **Description:** Updates the total seat capacity for an existing train.
+- **Input (JSON Request Body):**
+```json
+{
+  "totalSeats": 200
+}
+```
+- **Output (JSON Response):**
+```json
+{
+  "id": 1,
+  "trainNumber": "IR-1234",
+  "totalSeats": 200
+}
+```
+
+#### 4. Add a Route with Stops (Simple Setup)
+- **Endpoint:** `POST /api/admin/routes/simple`
+- **Description:** Creates a route for a given train and automatically sets up all intermediate stops/stations.
+- **Input (JSON Request Body):**
+```json
+{
+  "trainId": 1,
+  "routeName": "Bucharest - Cluj",
+  "stops": [
+    {
+      "stationName": "Bucharest",
+      "stopOrder": 1,
+      "arrivalTime": null,
+      "departureTime": "10:00"
+    },
+    {
+      "stationName": "Brasov",
+      "stopOrder": 2,
+      "arrivalTime": "12:30",
+      "departureTime": "12:45"
+    },
+    {
+      "stationName": "Cluj",
+      "stopOrder": 3,
+      "arrivalTime": "18:00",
+      "departureTime": null
+    }
+  ]
+}
+```
+- **Output (Text Response):**
+```text
+Route and all stops created successfully!
+```
+
+#### 5. Get All Routes
+- **Endpoint:** `GET /api/admin/routes`
+- **Description:** Retrieves all routes currently in the system.
+- **Input:** None
+- **Output (JSON Response):**
+```json
+[
+  {
+    "id": 1,
+    "name": "Bucharest - Cluj",
+    "train": {
+      "id": 1,
+      "trainNumber": "IR-1234",
+      "totalSeats": 150
+    },
+    "stops": [
+      /* List of Stop Objects */
+    ]
+  }
+]
+```
+
+#### 6. Delete Train
+- **Endpoint:** `DELETE /api/admin/trains/{id}`
+- **Description:** Removes a train from the system (if there are no active bookings).
+- **Input:** None
+- **Output (Text Response):**
+```text
+Train deleted successfully.
+```
+
+#### 7. Get All Bookings
+- **Endpoint:** `GET /api/admin/bookings`
+- **Description:** Retrieves all bookings made by passengers across all trains.
+- **Input:** None
+- **Output (JSON Response):**
+```json
+[
+  {
+    "id": 1,
+    "passengerEmail": "john.doe@example.com",
+    "trainNumber": "IR-1234",
+    "departureStation": "Bucharest",
+    "arrivalStation": "Cluj",
+    "seatsReserved": 2,
+    "travelDate": "2023-11-25"
+  }
+]
+```
+
+#### 8. Notify Delay
+- **Endpoint:** `POST /api/admin/notify-delay?trainId=1&delayTime=30 mins`
+- **Description:** Sends an email alert to all passengers booked on a specific train regarding a delay.
+- **Input:** Query Parameters `trainId` and `delayTime`.
+- **Output (Text Response):**
+```text
+Notifications sent to all passengers of train 1
+```
+
+---
+
+### Passenger Functionalities
+
+#### 1. Search for Routes
+- **Endpoint:** `GET /api/passenger/search?from={stationA}&to={stationB}`
+- **Description:** Finds available direct and connecting train routes between two stations.
+- **Input:** Query Parameters `from` and `to`. For example: `?from=Bucharest&to=Cluj`.
+- **Output (JSON Response):**
+```json
+[
+  {
+    "trainId": 1,
+    "trainNumber": "IR-1234",
+    "fromStation": "Bucharest",
+    "toStation": "Cluj",
+    "departureTime": "10:00",
+    "arrivalTime": "18:00"
+  }
+]
+```
+
+#### 2. Book a Ticket
+- **Endpoint:** `POST /api/passenger/book`
+- **Description:** Reserves seats on a given train for a specific date and stations, sending an email confirmation.
+- **Input (JSON Request Body):**
+```json
+{
+  "trainId": 1,
+  "travelDate": "2023-11-25",
+  "numberOfSeats": 2,
+  "departureStationName": "Bucharest",
+  "arrivalStationName": "Cluj",
+  "passengerEmail": "john.doe@example.com"
+}
+```
+- **Output (JSON Response):**
+```json
+{
+  "id": 1,
+  "passengerEmail": "john.doe@example.com",
+  "travelDate": "2023-11-25",
+  "seatsReserved": 2,
+  "train": {
+    "id": 1,
+    "trainNumber": "IR-1234",
+    "totalSeats": 150
+  },
+  "departureStation": {
+    "id": 1,
+    "name": "Bucharest"
+  },
+  "arrivalStation": {
+    "id": 3,
+    "name": "Cluj"
+  }
+}
+```
+
