@@ -88,3 +88,15 @@ The database consists of 5 main entities:
 * Booking: Tracks passenger emails, reserved seats, and their associated trains.
 spring.mail.password=your_mailtrap_password
 
+### Technical Setup & Troubleshooting
+To ensure the project compiles and runs correctly, follow these configuration steps:
+
+* **System Requirements**: 
+    * **JDK**: Java 17 (Recommended: Microsoft OpenJDK or Oracle LTS).
+    * **IDE**: IntelliJ IDEA (preferred) or Eclipse.
+    * **Build Tool**: Maven 3.6+.
+* **Enable Annotation Processing**: In IntelliJ, go to `Settings > Build, Execution, Deployment > Compiler > Annotation Processors` and check the box **"Enable annotation processing"**.
+* **Lombok Plugin**: Ensure the **Lombok plugin** is installed and active in your IDE to avoid compilation errors like `UNKNOWN TypeTag`.
+* **Project SDK**: Verify that both the **Project SDK** and the **Java Compiler** level are set to `17` in your IDE settings.
+* **Maven Reload**: If dependencies are not recognized, right-click `pom.xml` and select **Maven > Reload Project**.
+
