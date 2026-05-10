@@ -100,3 +100,29 @@ To ensure the project compiles and runs correctly, follow these configuration st
 * **Project SDK**: Verify that both the **Project SDK** and the **Java Compiler** level are set to `17` in your IDE settings.
 * **Maven Reload**: If dependencies are not recognized, right-click `pom.xml` and select **Maven > Reload Project**.
 
+---
+
+## Testing
+
+The application includes a comprehensive testing suite to ensure business logic reliability and API stability.
+
+### 1. Service Layer Tests (Unit Testing)
+These tests use **JUnit 5** and **Mockito** to validate business rules in isolation.
+* **Key Scenarios Tested**:
+    * Route creation logic and station mapping.
+    * Validation rules (e.g., preventing train deletion if active bookings exist).
+    * Email notification triggers for delays.
+    * Seat availability and booking calculations.
+
+### 2. Controller Layer Tests (API Integration Testing)
+These tests use **MockMvc** to simulate HTTP requests and verify API responses.
+* **Key Scenarios Tested**:
+    * Endpoint availability and correct HTTP status codes (`200 OK`, `400 Bad Request`).
+    * Proper JSON serialization/deserialization using `ObjectMapper`.
+    * Correct mapping of Request DTOs to Service calls.
+
+### Running the Tests
+To execute the entire test suite, use the following Maven command:
+```bash
+mvn test
+```
