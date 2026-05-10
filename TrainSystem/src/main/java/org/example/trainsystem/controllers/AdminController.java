@@ -1,5 +1,6 @@
 package org.example.trainsystem.controllers;
 
+import jakarta.validation.Valid;
 import org.example.trainsystem.dto.AdminBookingDTO;
 import org.example.trainsystem.dto.RouteRequestDTO;
 import org.example.trainsystem.models.Booking;
@@ -20,7 +21,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @PostMapping("/trains")
-    public ResponseEntity<Train> addTrain(@RequestBody Train train) {
+    public ResponseEntity<Train> addTrain(@Valid @RequestBody Train train) {
         return ResponseEntity.ok(adminService.addTrain(train));
     }
 
@@ -30,7 +31,7 @@ public class AdminController {
     }
 
     @PostMapping("/routes")
-    public ResponseEntity<Route> addRoute(@RequestBody Route route) {
+    public ResponseEntity<Route> addRoute(@Valid @RequestBody Route route) {
         return ResponseEntity.ok(adminService.addRoute(route));
     }
 
@@ -71,12 +72,12 @@ public class AdminController {
     }
 
     @PutMapping("/trains/{id}")
-    public ResponseEntity<Train> updateTrain(@PathVariable Long id, @RequestBody Train trainDetails) {
+    public ResponseEntity<Train> updateTrain(@PathVariable Long id,@Valid @RequestBody Train trainDetails) {
         return ResponseEntity.ok(adminService.updateTrainSeats(id, trainDetails.getTotalSeats()));
     }
 
     @PostMapping("/routes/simple")
-    public ResponseEntity<String> addSimpleRoute(@RequestBody RouteRequestDTO request) {
+    public ResponseEntity<String> addSimpleRoute(@Valid @RequestBody RouteRequestDTO request) {
         try {
             adminService.addRouteWithStations(request);
             return ResponseEntity.ok("Route and all stops created successfully!");

@@ -1,5 +1,6 @@
 package org.example.trainsystem.controllers;
 
+import jakarta.validation.Valid;
 import org.example.trainsystem.dto.BookingRequestDTO;
 import org.example.trainsystem.dto.RouteResponseDTO;
 import org.example.trainsystem.models.Booking;
@@ -25,7 +26,7 @@ public class PassengerController {
     }
 
     @PostMapping("/book")
-    public ResponseEntity<Booking> bookTicket(@RequestBody BookingRequestDTO request) {
+    public ResponseEntity<Booking> bookTicket(@Valid @RequestBody BookingRequestDTO request) {
         return ResponseEntity.ok(bookingService.createBooking(request));
     }
 }

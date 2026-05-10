@@ -2,6 +2,7 @@ package org.example.trainsystem.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 import java.time.LocalTime;
 
@@ -28,5 +29,6 @@ public class RouteStop {
     private LocalTime arrivalTime;
     private LocalTime departureTime;
 
+    @Min(value = 0, message = "Stop order must be positive")
     private int stopOrder;
 }

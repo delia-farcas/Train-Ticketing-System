@@ -11,6 +11,9 @@
         .nav-tabs .nav-link.active { color: #990dfd; border-bottom: 3px solid #890dfd; background: none; }
         .admin-section-title { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; color: #333; }
         .btn-action { padding: 2px 8px; font-size: 0.85rem; }
+        .field-error { color: #dc3545; font-size: 0.8rem; margin-top: 3px; display: none; }
+        .form-control.is-invalid { border-color: #dc3545; }
+        .form-control.is-valid { border-color: #198754; }
     </style>
 </head>
 <body>
@@ -26,59 +29,94 @@
     </ul>
 
     <div class="tab-content mt-4">
+
+        <!-- SEARCH & BOOK TAB -->
         <div class="tab-pane fade show active" id="search">
             <div class="card p-4">
                 <h3>Find your train</h3>
                 <div class="row g-3">
-                    <div class="col-md-5"><input type="text" id="from" class="form-control" placeholder="From..."></div>
-                    <div class="col-md-5"><input type="text" id="to" class="form-control" placeholder="To..."></div>
-                    <div class="col-md-2"><button onclick="searchRoutes()" class="btn btn-primary w-100">Search</button></div>
+                    <div class="col-md-5">
+                        <input type="text" id="from" class="form-control" placeholder="From...">
+                        <div class="field-error" id="from-error">Please enter a departure station.</div>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="text" id="to" class="form-control" placeholder="To...">
+                        <div class="field-error" id="to-error">Please enter an arrival station.</div>
+                    </div>
+                    <div class="col-md-2">
+                        <button onclick="searchRoutes()" class="btn btn-primary w-100">Search</button>
+                    </div>
+                    <div class="col-12" id="same-station-error" style="display:none;">
+                        <span class="text-danger small">Departure and arrival stations cannot be the same.</span>
+                    </div>
                 </div>
                 <div id="results" class="mt-4"></div>
             </div>
         </div>
+
+        <!-- MANAGE TRAINS TAB -->
         <div class="tab-pane fade" id="admin-trains">
             <div class="card p-4">
                 <h4 class="admin-section-title">Add / Update Train</h4>
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4"><input type="text" id="trainNum" class="form-control" placeholder="Train Number"></div>
-                    <div class="col-md-4"><input type="number" id="seats" class="form-control" placeholder="Total Seats"></div>
-                    <div class="col-md-4"><button onclick="addTrain()" class="btn btn-success w-100">Save Train</button></div>
+                    <div class="col-md-4">
+                        <input type="text" id="trainNum" class="form-control" placeholder="Train Number (e.g. IC-123)">
+                        <div class="field-error" id="trainNum-error"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" id="seats" class="form-control" placeholder="Total Seats (1–2000)" min="1" max="2000">
+                        <div class="field-error" id="seats-error"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <button onclick="addTrain()" class="btn btn-success w-100">Save Train</button>
+                    </div>
                 </div>
                 <h4 class="admin-section-title">Train List & Delays</h4>
                 <div id="train-list-container"></div>
             </div>
         </div>
+
+        <!-- MANAGE ROUTES TAB -->
         <div class="tab-pane fade" id="admin-routes">
             <div class="card p-4">
                 <h4 class="admin-section-title">Add New Direct Route</h4>
                 <div class="row g-3 mb-4">
                     <div class="col-md-12">
                         <label class="form-label">Assign Train ID</label>
-                        <input type="number" id="routeTrainId" class="form-control" placeholder="e.g. 1">
+                        <input type="number" id="routeTrainId" class="form-control" placeholder="e.g. 1" min="1">
+                        <div class="field-error" id="routeTrainId-error">Train ID must be a positive number.</div>
                     </div>
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Route Display Name</label>
                         <input type="text" id="routeName" class="form-control" placeholder="e.g. Bucuresti - Constanta Direct">
+                        <div class="field-error" id="routeName-error">Route name is required (2–150 characters).</div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Departure Station</label>
                         <input type="text" id="depStation" class="form-control" placeholder="e.g. Cluj-Napoca">
+                        <div class="field-error" id="depStation-error">Required.</div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Departure Time</label>
                         <input type="time" id="depTime" class="form-control">
+                        <div class="field-error" id="depTime-error">Required.</div>
                     </div>
-
                     <div class="col-md-3">
                         <label class="form-label">Arrival Station</label>
                         <input type="text" id="arrStation" class="form-control" placeholder="e.g. Pascani">
+                        <div class="field-error" id="arrStation-error">Required.</div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label">Arrival Time</label>
                         <input type="time" id="arrTime" class="form-control">
+                        <div class="field-error" id="arrTime-error">Required.</div>
                     </div>
-
+                    <div class="col-12" id="route-same-station-error" style="display:none;">
+                        <span class="text-danger small">Departure and arrival stations cannot be the same.</span>
+                    </div>
+                    <div class="col-12" id="route-time-error" style="display:none;">
+                        <span class="text-danger small">Arrival time must be after departure time.</span>
+                    </div>
                     <div class="col-md-12">
                         <button onclick="addRoute()" class="btn btn-success w-100">Create Route & Stops</button>
                     </div>
@@ -88,6 +126,8 @@
                 <div id="route-list-container"></div>
             </div>
         </div>
+
+        <!-- BOOKINGS TAB -->
         <div class="tab-pane fade" id="admin-bookings">
             <div class="card p-4">
                 <h4 class="admin-section-title">All System Bookings</h4>
@@ -106,6 +146,156 @@
 
 <script>
     const API_BASE = "/api/admin";
+
+    // ─── Validation helpers ───────────────────────────────────────────────────
+
+    function isValidEmail(email) {
+        // Must contain @, have something before and after it, and a dot in the domain part
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    }
+
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        const error = document.getElementById(fieldId + '-error');
+        if (field) field.classList.add('is-invalid');
+        if (error) { error.textContent = message; error.style.display = 'block'; }
+    }
+
+    function clearError(fieldId) {
+        const field = document.getElementById(fieldId);
+        const error = document.getElementById(fieldId + '-error');
+        if (field) field.classList.remove('is-invalid');
+        if (error) error.style.display = 'none';
+    }
+
+    function markValid(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) { field.classList.remove('is-invalid'); field.classList.add('is-valid'); }
+    }
+
+    function clearAllErrors(...fieldIds) {
+        fieldIds.forEach(id => { clearError(id); const f = document.getElementById(id); if (f) f.classList.remove('is-valid'); });
+    }
+
+    // ─── Train validation ────────────────────────────────────────────────────
+
+    function validateTrain() {
+        const trainNumber = document.getElementById('trainNum').value.trim();
+        const seats = parseInt(document.getElementById('seats').value);
+        let valid = true;
+
+        clearAllErrors('trainNum', 'seats');
+
+        if (!trainNumber) {
+            showError('trainNum', 'Train number is required.'); valid = false;
+        } else if (!/^[A-Z0-9\-]{2,10}$/.test(trainNumber)) {
+            showError('trainNum', 'Use 2–10 uppercase letters, digits, or hyphens (e.g. IC-123).'); valid = false;
+        } else { markValid('trainNum'); }
+
+        if (!document.getElementById('seats').value) {
+            showError('seats', 'Seat count is required.'); valid = false;
+        } else if (isNaN(seats) || seats < 1) {
+            showError('seats', 'Must have at least 1 seat.'); valid = false;
+        } else if (seats > 2000) {
+            showError('seats', 'Seat count cannot exceed 2000.'); valid = false;
+        } else { markValid('seats'); }
+
+        return valid;
+    }
+
+    // ─── Route validation ────────────────────────────────────────────────────
+
+    function validateRoute() {
+        const trainId = document.getElementById('routeTrainId').value;
+        const routeName = document.getElementById('routeName').value.trim();
+        const depStation = document.getElementById('depStation').value.trim();
+        const depTime = document.getElementById('depTime').value;
+        const arrStation = document.getElementById('arrStation').value.trim();
+        const arrTime = document.getElementById('arrTime').value;
+        let valid = true;
+
+        clearAllErrors('routeTrainId', 'routeName', 'depStation', 'depTime', 'arrStation', 'arrTime');
+        document.getElementById('route-same-station-error').style.display = 'none';
+        document.getElementById('route-time-error').style.display = 'none';
+
+        if (!trainId || parseInt(trainId) < 1) {
+            showError('routeTrainId', 'Train ID must be a positive number.'); valid = false;
+        } else { markValid('routeTrainId'); }
+
+        if (!routeName || routeName.length < 2) {
+            showError('routeName', 'Route name is required (min 2 characters).'); valid = false;
+        } else if (routeName.length > 150) {
+            showError('routeName', 'Route name must be under 150 characters.'); valid = false;
+        } else { markValid('routeName'); }
+
+        if (!depStation) { showError('depStation', 'Departure station is required.'); valid = false; }
+        else { markValid('depStation'); }
+
+        if (!depTime) { showError('depTime', 'Departure time is required.'); valid = false; }
+        else { markValid('depTime'); }
+
+        if (!arrStation) { showError('arrStation', 'Arrival station is required.'); valid = false; }
+        else { markValid('arrStation'); }
+
+        if (!arrTime) { showError('arrTime', 'Arrival time is required.'); valid = false; }
+        else { markValid('arrTime'); }
+
+        if (depStation && arrStation && depStation.toLowerCase() === arrStation.toLowerCase()) {
+            document.getElementById('route-same-station-error').style.display = 'block'; valid = false;
+        }
+
+        if (depTime && arrTime && arrTime <= depTime) {
+            document.getElementById('route-time-error').style.display = 'block'; valid = false;
+        }
+
+        return valid;
+    }
+
+    // ─── Search validation ───────────────────────────────────────────────────
+
+    function validateSearch() {
+        const from = document.getElementById('from').value.trim();
+        const to = document.getElementById('to').value.trim();
+        let valid = true;
+
+        clearAllErrors('from', 'to');
+        document.getElementById('same-station-error').style.display = 'none';
+
+        if (!from) { showError('from', 'Please enter a departure station.'); valid = false; }
+        if (!to)   { showError('to',   'Please enter an arrival station.');  valid = false; }
+
+        if (from && to && from.toLowerCase() === to.toLowerCase()) {
+            document.getElementById('same-station-error').style.display = 'block'; valid = false;
+        }
+
+        return valid;
+    }
+
+    // ─── Booking validation (inline prompt-style) ────────────────────────────
+
+    function validateBookingInputs(email, seats) {
+        const errors = [];
+
+        if (!email || !email.trim()) {
+            errors.push('Email is required.');
+        } else if (!isValidEmail(email)) {
+            errors.push('Please enter a valid email address (must contain @).');
+        }
+
+        const seatCount = parseInt(seats);
+        if (!seats || isNaN(seatCount)) {
+            errors.push('Number of seats is required.');
+        } else if (seatCount < 1) {
+            errors.push('You must book at least 1 seat.');
+        } else if (seatCount > 10) {
+            errors.push('You cannot book more than 10 seats at once.');
+        }
+
+        return errors;
+    }
+
+    // ─── API calls ────────────────────────────────────────────────────────────
+
     async function loadBookings() {
         const tbody = document.getElementById('bookings-table-body');
         try {
@@ -135,35 +325,25 @@
                 return `
                     <div class="d-flex justify-content-between border-bottom py-2">
                          <span>
-                         <strong>ID: ${r.id}</strong> - ${r.name || 'No Name'}
-                         <small class="text-muted">(${dep} ➔ ${arr})</small>
-                         <span class="badge bg-info text-dark">Train: ${r.train ? r.train.trainNumber : 'N/A'}</span>
-                    </span>
-                    <button onclick="deleteRoute(${r.id})" class="btn btn-action btn-outline-danger">Delete</button>
+                             <strong>ID: ${r.id}</strong> - ${r.name || 'No Name'}
+                             <small class="text-muted">(${dep} ➔ ${arr})</small>
+                             <span class="badge bg-info text-dark">Train: ${r.train ? r.train.trainNumber : 'N/A'}</span>
+                        </span>
+                        <button onclick="deleteRoute(${r.id})" class="btn btn-action btn-outline-danger">Delete</button>
                     </div>`;
             }).join('');
         } catch (e) { container.innerHTML = "No routes found."; }
     }
 
     async function addRoute() {
-        const trainId = document.getElementById('routeTrainId').value;
-        const routeName = document.getElementById('routeName').value;
-        const depStation = document.getElementById('depStation').value;
-        const depTime = document.getElementById('depTime').value;
-        const arrStation = document.getElementById('arrStation').value;
-        const arrTime = document.getElementById('arrTime').value;
-
-        if(!trainId || !depStation || !depTime || !arrStation || !arrTime) {
-            alert("Please fill all fields!");
-            return;
-        }
+        if (!validateRoute()) return;
 
         const routeData = {
-            trainId: parseInt(trainId),
-            routeName: routeName,
+            trainId: parseInt(document.getElementById('routeTrainId').value),
+            routeName: document.getElementById('routeName').value.trim(),
             stops: [
-                { stationName: depStation, stopOrder: 1, arrivalTime: null, departureTime: depTime },
-                { stationName: arrStation, stopOrder: 2, arrivalTime: arrTime, departureTime: null }
+                { stationName: document.getElementById('depStation').value.trim(), stopOrder: 1, arrivalTime: null,  departureTime: document.getElementById('depTime').value },
+                { stationName: document.getElementById('arrStation').value.trim(), stopOrder: 2, arrivalTime: document.getElementById('arrTime').value, departureTime: null }
             ]
         };
 
@@ -173,17 +353,17 @@
             body: JSON.stringify(routeData)
         });
 
-        if(response.ok) {
+        if (response.ok) {
             alert("Route created!");
             loadRoutes();
         } else {
             const err = await response.text();
-            alert("Error 400: Check if Train ID exists and Station names match DB exactly.\nDetails: " + err);
+            alert("Error: Check if Train ID exists and station names match the DB.\nDetails: " + err);
         }
     }
 
     async function deleteRoute(id) {
-        if(confirm("Delete route?")) {
+        if (confirm("Delete route?")) {
             await fetch(`${API_BASE}/routes/${id}`, { method: 'DELETE' });
             loadRoutes();
         }
@@ -208,18 +388,30 @@
     }
 
     async function addTrain() {
-        const trainNumber = document.getElementById('trainNum').value;
-        const totalSeats = document.getElementById('seats').value;
-        await fetch(`${API_BASE}/trains`, {
+        if (!validateTrain()) return;
+
+        const trainNumber = document.getElementById('trainNum').value.trim();
+        const totalSeats = parseInt(document.getElementById('seats').value);
+
+        const response = await fetch(`${API_BASE}/trains`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ trainNumber, totalSeats: parseInt(totalSeats) })
+            body: JSON.stringify({ trainNumber, totalSeats })
         });
-        loadTrains();
+
+        if (response.ok) {
+            document.getElementById('trainNum').value = '';
+            document.getElementById('seats').value = '';
+            clearAllErrors('trainNum', 'seats');
+            loadTrains();
+        } else {
+            const err = await response.text();
+            alert("Failed to save train: " + err);
+        }
     }
 
     async function deleteTrain(id) {
-        if(confirm("Delete train?")) {
+        if (confirm("Delete train?")) {
             const res = await fetch(`${API_BASE}/trains/${id}`, { method: 'DELETE' });
             if (!res.ok) alert(await res.text());
             loadTrains();
@@ -227,66 +419,83 @@
     }
 
     async function updateTrainPrompt(id, oldSeats) {
-        const newSeats = prompt("New seat capacity:", oldSeats);
-        if(newSeats) {
-            await fetch(`${API_BASE}/trains/${id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ totalSeats: parseInt(newSeats) })
-            });
-            loadTrains();
-        }
+        const input = prompt("New seat capacity (1–2000):", oldSeats);
+        if (input === null) return;
+
+        const newSeats = parseInt(input);
+        if (isNaN(newSeats) || newSeats < 1) { alert("Please enter a valid number (min 1)."); return; }
+        if (newSeats > 2000) { alert("Seat count cannot exceed 2000."); return; }
+
+        await fetch(`${API_BASE}/trains/${id}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ totalSeats: newSeats })
+        });
+        loadTrains();
     }
 
     async function notifyDelayPrompt(id) {
         const time = prompt("Delay time (e.g. 20 mins):");
-        if(time) {
-            await fetch(`${API_BASE}/notify-delay?trainId=${id}&delayTime=${encodeURIComponent(time)}`, { method: 'POST' });
+        if (time && time.trim()) {
+            await fetch(`${API_BASE}/notify-delay?trainId=${id}&delayTime=${encodeURIComponent(time.trim())}`, { method: 'POST' });
             alert("Delay notification sent!");
         }
     }
 
     async function searchRoutes() {
-        const from = document.getElementById('from').value;
-        const to = document.getElementById('to').value;
+        if (!validateSearch()) return;
+
+        const from = document.getElementById('from').value.trim();
+        const to = document.getElementById('to').value.trim();
         const response = await fetch(`/api/passenger/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
         const data = await response.json();
         const resDiv = document.getElementById('results');
+
         if (response.ok && data.length > 0) {
-            resDiv.innerHTML = data.map(route => {
-                return `
-                    <div class="card p-3 mb-2 border-start border-primary border-4 shadow-sm">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1 text-primary">Train ${route.trainNumber}</h5>
-                                <p class="mb-0 text-muted">${route.departureStation} (${route.departureTime}) ➔ ${route.arrivalStation} (${route.arrivalTime})</p>
-                            </div>
-                            <button onclick="bookTicket(${route.trainId}, '${route.departureStation}', '${route.arrivalStation}')" class="btn btn-dark">Book Now</button>
+            resDiv.innerHTML = data.map(route => `
+                <div class="card p-3 mb-2 border-start border-primary border-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 text-primary">Train ${route.trainNumber}</h5>
+                            <p class="mb-0 text-muted">${route.departureStation} (${route.departureTime}) ➔ ${route.arrivalStation} (${route.arrivalTime})</p>
                         </div>
+                        <button onclick="bookTicket(${route.trainId}, '${route.departureStation}', '${route.arrivalStation}')" class="btn btn-dark">Book Now</button>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `).join('');
         } else {
             resDiv.innerHTML = "<div class='alert alert-warning'>No routes found.</div>";
         }
     }
 
     async function bookTicket(trainId, from, to) {
-        const email = prompt("Email:");
-        const seats = prompt("Seats:", "1");
-        if (!email || !seats) return;
+        const email = prompt("Your email address:");
+        if (email === null) return;
+
+        const seats = prompt("Number of seats (1–10):", "1");
+        if (seats === null) return;
+
+        const errors = validateBookingInputs(email, seats);
+        if (errors.length > 0) {
+            alert("Please fix the following:\n\n• " + errors.join("\n• "));
+            return;
+        }
+
         const response = await fetch('/api/passenger/book', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                passengerEmail: email, trainId,
-                departureStationName: from, arrivalStationName: to,
+                passengerEmail: email.trim(),
+                trainId,
+                departureStationName: from,
+                arrivalStationName: to,
                 travelDate: new Date().toISOString().split('T')[0],
                 numberOfSeats: parseInt(seats)
             })
         });
-        if(response.ok) alert("Booked!");
-        else alert("Failed: " + await response.text());
+
+        if (response.ok) alert("Booking confirmed!");
+        else alert("Booking failed: " + await response.text());
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
